@@ -161,6 +161,12 @@ public class BookDao {
 	        }
 	        return book;
 	    }
+
+
+	public List<Book> wildcardQuery(String query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	  
 	
 }
