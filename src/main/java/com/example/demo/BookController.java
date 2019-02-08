@@ -83,16 +83,13 @@ public class BookController {
 		return bookDao.wildcardQuery(query);
 	}
 
-	@GetMapping("/create")
-	public String showCreateForm(Model model) {
-		BooksCreationDto booksForm = new BooksCreationDto();
-
-		for (int i = 1; i <= 3; i++) {
-			booksForm.addBook(new Book());
-		}
-
-		model.addAttribute("form", booksForm);
-		return "books/createBooksForm";
-	}
+	/*
+	 * @GetMapping("/create") public String showCreateForm(Model model) {
+	 * BooksCreationDto booksForm = new BooksCreationDto();
+	 * 
+	 * for (int i = 1; i <= 3; i++) { booksForm.addBook(new Book()); }
+	 * 
+	 * model.addAttribute("form", booksForm); return "books/createBooksForm"; }
+	 */
 
 }

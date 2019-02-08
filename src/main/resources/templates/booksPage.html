@@ -10,6 +10,8 @@
         <tr>
             <th> Title </th>
             <th> Author </th>
+            <th> Price </th>
+            <th> id </th>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +21,8 @@
         <tr th:each="book : ${books}">
             <td><span th:text="${book.title}"> Title </span></td>
             <td><span th:text="${book.author}"> Author </span></td>
+             <td><span th:text="${book.price}"> Price </span></td>
+               <td><span th:text="${book.id}"> Id </span></td> 
         </tr>
     </tbody>
 </table>

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.elasticsearch.ElasticsearchException;
@@ -19,12 +20,20 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -84,13 +93,38 @@ public class BookDao {
 
 	        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-	        MatchQueryBuilder matchQueryBuilder = QueryBuilders
-	                .matchQuery("title",title)
-	                .operator(Operator.AND);
+		/*
+		 * MatchQueryBuilder matchQueryBuilder = QueryBuilders
+		 * .matchQuery("title",title) .operator(Operator.AND);
+		 * 
+		 * searchSourceBuilder.query(matchQueryBuilder);
+		 */
+	        
+	        searchSourceBuilder.query(QueryBuilders.prefixQuery("title", title)); 
+	        searchSourceBuilder.from(0); 
+	        searchSourceBuilder.size(5);
+	        //searchSourceBuilder.sort(new FieldSortBuilder("price").order(SortOrder.DESC));
+	        
+	       
+		
+		
+		  HighlightBuilder highlightBuilder = new HighlightBuilder();
+		  HighlightBuilder.Field highlightTitle = new HighlightBuilder.Field("title");
+		  highlightTitle.highlighterType("unified");
+		  highlightBuilder.field(highlightTitle);
+		  searchSourceBuilder.highlighter(highlightBuilder);
+		 
+	        
+	        SuggestionBuilder<?> termSuggestionBuilder =
+	        	    SuggestBuilders.termSuggestion("title").text(title); 
+	        	SuggestBuilder suggestBuilder = new SuggestBuilder();
+	        	suggestBuilder.addSuggestion("suggest_user", termSuggestionBuilder); 
+	        	searchSourceBuilder.suggest(suggestBuilder);
 
-	        searchSourceBuilder.query(matchQueryBuilder);
-
+	        
 	        searchRequest.source(searchSourceBuilder);
+	        
+	        
 
 	        SearchResponse searchResponse =
 	        		restHighLevelClient.search(searchRequest);
@@ -154,6 +188,17 @@ public class BookDao {
 	        List<Book> book = new ArrayList<>();
 
 	        for (SearchHit hit : searchHit){
+	        	System.err.println(hit.getScore());
+	        	
+			
+			
+			  Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+			  HighlightField highlight = highlightFields.get("title"); Text[] fragments =
+			  highlight.fragments(); String fragmentString = fragments[0].string();
+			  System.err.println(fragmentString);
+			 
+	        	
+	            
 	            book
 	                    .add(objectMapper
 	                            .convertValue(hit
@@ -161,6 +206,8 @@ public class BookDao {
 	        }
 	        return book;
 	    }
+	  
+	 
 
 
 	public List<Book> wildcardQuery(String query) {
